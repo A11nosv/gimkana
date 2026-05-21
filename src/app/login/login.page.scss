@@ -1,0 +1,36 @@
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+ion-card {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+ion-card-title {
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.error-container {
+  padding: 10px;
+  background-color: rgba(var(--ion-color-danger-rgb), 0.1);
+  border-radius: 8px;
+  border-left: 4px solid var(--ion-color-danger);
+}
+
+/* Accessibility: High contrast support */
+@media (prefers-contrast: high) {
+  ion-card {
+    border: 2px solid currentColor;
+  }
+  .error-container {
+    border: 2px solid var(--ion-color-danger);
+    background-color: transparent;
+  }
+}

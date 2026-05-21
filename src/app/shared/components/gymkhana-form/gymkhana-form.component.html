@@ -1,0 +1,64 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Nueva Gimkana</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" aria-label="Cancelar y cerrar formulario">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div role="form" aria-labelledby="gym-form-title">
+    <h2 id="gym-form-title" class="ion-margin-bottom">Configuración de la Gimkana</h2>
+
+    <ion-list>
+      <!-- Gymkhana Name -->
+      <ion-item class="ion-margin-bottom">
+        <ion-label position="stacked">Nombre de la Gimkana</ion-label>
+        <ion-input 
+          [(ngModel)]="gymkhanaName" 
+          placeholder="Ej: Gran Aventura Once" 
+          aria-required="true"
+          required>
+        </ion-input>
+      </ion-item>
+
+      <!-- Number of Groups -->
+      <ion-item class="ion-margin-bottom">
+        <ion-label position="stacked">Número de grupos participantes</ion-label>
+        <ion-input 
+          type="number" 
+          [(ngModel)]="numGroups" 
+          (ionInput)="updateGroups()"
+          placeholder="Ej: 3"
+          min="1"
+          aria-required="true"
+          required>
+        </ion-input>
+        <ion-note slot="error" *ngIf="numGroups !== null && numGroups < 1">
+          Debe haber al menos un grupo.
+        </ion-note>
+      </ion-item>
+
+      <!-- Group Names (Dynamic) -->
+      <div *ngIf="groups.length > 0" class="groups-container ion-margin-top">
+        <h3 class="ion-margin-start ion-margin-bottom">Nombres de los Grupos</h3>
+        <ion-item *ngFor="let group of groups; let i = index; trackBy: trackByFn" class="ion-margin-bottom">
+          <ion-label position="stacked">Nombre del Grupo {{ i + 1 }}</ion-label>
+          <ion-input 
+            [(ngModel)]="groups[i].name" 
+            [placeholder]="'Grupo ' + (i + 1)"
+            aria-required="true"
+            required>
+          </ion-input>
+        </ion-item>
+      </div>
+    </ion-list>
+
+    <div class="actions ion-margin-top">
+      <ion-button expand="block" (click)="save()" [disabled]="!isFormValid()">
+        Crear Gimkana
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

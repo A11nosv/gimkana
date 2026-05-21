@@ -1,0 +1,48 @@
+<div #mapContainer class="map-container" role="application" aria-label="Mapa de OpenStreetMap"></div>
+
+<!-- Create Gymkhana FAB (Only for Creator Mode and no active gymkhana) -->
+<ion-fab *ngIf="isCreatorMode && !activeGymkhana" vertical="top" horizontal="end" slot="fixed" class="ion-margin-top ion-margin-end">
+  <ion-fab-button color="success" (click)="openGymkhanaForm()" aria-label="Crear nueva Gimkana">
+    <ion-icon name="trophy-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Add Waypoints FAB (Only for Creator Mode and active gymkhana) -->
+<ion-fab *ngIf="isCreatorMode && activeGymkhana" vertical="top" horizontal="end" slot="fixed" class="ion-margin-top ion-margin-end">
+  <ion-fab-button color="primary" aria-label="Añadir punto a la gimkana">
+    <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+  <ion-fab-list side="bottom">
+    <ion-fab-button (click)="openLocationForm('gps')" aria-label="Añadir por coordenadas GPS">
+      <ion-icon name="keypad-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-button (click)="startMapSelection()" aria-label="Añadir pulsando en el mapa">
+      <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-button (click)="createFromDevice()" aria-label="Añadir usando ubicación actual">
+      <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab-list>
+</ion-fab>
+
+<!-- Active Gymkhana Indicator -->
+<div *ngIf="isCreatorMode && activeGymkhana" class="gymkhana-indicator" role="status">
+  <ion-text color="light">
+    <p>Editando: <strong>{{ activeGymkhana.name }}</strong></p>
+  </ion-text>
+</div>
+
+<!-- Locate User FAB -->
+<ion-fab vertical="bottom" horizontal="end" slot="fixed" class="ion-margin">
+  <ion-fab-button (click)="centerOnUser()" 
+                  aria-label="Centrar mapa en mi ubicación actual"
+                  title="Centrar en mi ubicación">
+    <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Map Selection Indicator -->
+<div *ngIf="isMapSelectionActive" class="selection-overlay" role="alert" aria-live="polite">
+  <p>Toque el mapa para fijar la ubicación</p>
+  <ion-button size="small" fill="clear" color="light" (click)="isMapSelectionActive = false">Cancelar</ion-button>
+</div>

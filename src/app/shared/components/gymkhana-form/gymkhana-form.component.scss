@@ -1,0 +1,28 @@
+.groups-container {
+  background-color: var(--ion-color-light);
+  padding: 10px 0;
+  border-radius: 12px;
+  
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+  }
+}
+
+.actions {
+  ion-button {
+    --border-radius: 8px;
+    height: 50px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+}
+
+/* Accessibility: High contrast */
+@media (prefers-contrast: high) {
+  .groups-container {
+    border: 2px solid currentColor;
+    background-color: transparent;
+  }
+}

@@ -1,0 +1,69 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Nueva Ubicación</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cancel()" aria-label="Cancelar y cerrar formulario">Cerrar</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div role="form" aria-labelledby="form-title">
+    <h2 id="form-title" class="ion-margin-bottom">Datos de la Localización</h2>
+    
+    <ion-list>
+      <ion-item class="ion-margin-bottom">
+        <ion-label position="stacked">Nombre de la ubicación</ion-label>
+        <ion-input 
+          [(ngModel)]="locationName" 
+          placeholder="Ej: Entrada del parque" 
+          aria-required="true"
+          required>
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="ion-margin-bottom">
+        <ion-label position="stacked">Comentarios / Pistas</ion-label>
+        <ion-textarea 
+          [(ngModel)]="comments" 
+          placeholder="Ej: Está detrás del árbol grande"
+          rows="3"
+          aria-label="Comentarios adicionales para este punto">
+        </ion-textarea>
+      </ion-item>
+
+      <ion-item *ngIf="mode === 'gps'" class="ion-margin-bottom">
+        <ion-label position="stacked">Latitud</ion-label>
+        <ion-input 
+          type="number" 
+          [(ngModel)]="lat" 
+          placeholder="0.0000"
+          aria-required="true"
+          required>
+        </ion-input>
+      </ion-item>
+
+      <ion-item *ngIf="mode === 'gps'" class="ion-margin-bottom">
+        <ion-label position="stacked">Longitud</ion-label>
+        <ion-input 
+          type="number" 
+          [(ngModel)]="lng" 
+          placeholder="0.0000"
+          aria-required="true"
+          required>
+        </ion-input>
+      </ion-item>
+
+      <div *ngIf="mode !== 'gps'" class="coordinates-info ion-margin-bottom">
+        <p><strong>Coordenadas seleccionadas:</strong></p>
+        <p>Lat: {{ lat | number:'1.4-6' }}, Lng: {{ lng | number:'1.4-6' }}</p>
+      </div>
+    </ion-list>
+
+    <div class="actions ion-margin-top">
+      <ion-button expand="block" (click)="save()" [disabled]="!isFormValid()">
+        Guardar Ubicación
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
