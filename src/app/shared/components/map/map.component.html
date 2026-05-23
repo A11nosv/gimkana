@@ -1,26 +1,64 @@
-<div #mapContainer class="map-container" role="application" aria-label="Mapa de OpenStreetMap"></div>
+<div #mapContainer class="map-container" role="application" aria-label="Mapa de navegación para la gimkana"></div>
 
-<!-- Create Gymkhana FAB (Only for Creator Mode and no active gymkhana) -->
+<!-- Visual Radar/Distance Indicator (WCAG 1.1.1, 1.4.1) -->
+<div *ngIf="!isCreatorMode && activeGymkhana && (distance$ | async) as distance" 
+     class="radar-overlay" 
+     role="status" 
+     aria-live="polite">
+  <ion-card>
+    <ion-card-content>
+      <div class="distance-info">
+        <ion-icon name="radio-outline" color="primary" aria-hidden="true"></ion-icon>
+        <ion-text>
+          <p>Distancia al objetivo: <strong>{{ distance | number:'1.0-0' }}m</strong></p>
+        </ion-text>
+      </div>
+      <div class="radar-visual" [style.opacity]="getRadarOpacity(distance)">
+        <div class="pulse-ring"></div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</div>
+
+<!-- Create/Browse Gymkhana FAB (Only for Creator Mode and no active gymkhana) -->
 <ion-fab *ngIf="isCreatorMode && !activeGymkhana" vertical="top" horizontal="end" slot="fixed" class="ion-margin-top ion-margin-end">
-  <ion-fab-button color="success" (click)="openGymkhanaForm()" aria-label="Crear nueva Gimkana">
-    <ion-icon name="trophy-outline" aria-hidden="true"></ion-icon>
+  <ion-fab-button color="success" aria-label="Abrir menú de gestión de gimkanas">
+    <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+  <ion-fab-list side="bottom">
+    <ion-fab-button (click)="openGymkhanaForm()" aria-label="Crear una nueva gimkana">
+      <ion-icon name="trophy-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-button (click)="openGymkhanaList()" aria-label="Ver listado de mis gimkanas creadas" color="tertiary">
+      <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab-list>
+</ion-fab>
+
+<!-- Join Gymkhana FAB (Only for Player Mode and no active gymkhana) -->
+<ion-fab *ngIf="!isCreatorMode && !activeGymkhana" vertical="top" horizontal="end" slot="fixed" class="ion-margin-top ion-margin-end">
+  <ion-fab-button color="primary" (click)="openPublishedGymkhanaList()" aria-label="Explorar gimkanas publicadas disponibles para jugar">
+    <ion-icon name="play-outline" aria-hidden="true"></ion-icon>
   </ion-fab-button>
 </ion-fab>
 
 <!-- Add Waypoints FAB (Only for Creator Mode and active gymkhana) -->
 <ion-fab *ngIf="isCreatorMode && activeGymkhana" vertical="top" horizontal="end" slot="fixed" class="ion-margin-top ion-margin-end">
-  <ion-fab-button color="primary" aria-label="Añadir punto a la gimkana">
+  <ion-fab-button color="primary" aria-label="Menú para añadir nuevos puntos de control">
     <ion-icon name="add-outline" aria-hidden="true"></ion-icon>
   </ion-fab-button>
   <ion-fab-list side="bottom">
-    <ion-fab-button (click)="openLocationForm('gps')" aria-label="Añadir por coordenadas GPS">
+    <ion-fab-button (click)="openLocationForm('gps')" aria-label="Añadir punto ingresando coordenadas GPS manuales">
       <ion-icon name="keypad-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
-    <ion-fab-button (click)="startMapSelection()" aria-label="Añadir pulsando en el mapa">
+    <ion-fab-button (click)="startMapSelection()" aria-label="Añadir punto seleccionando una ubicación en el mapa">
       <ion-icon name="map-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
-    <ion-fab-button (click)="createFromDevice()" aria-label="Añadir usando ubicación actual">
+    <ion-fab-button (click)="createFromDevice()" aria-label="Añadir punto usando mi ubicación GPS actual">
       <ion-icon name="phone-portrait-outline" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+    <ion-fab-button (click)="openGymkhanaList()" aria-label="Ver todas mis gimkanas" color="tertiary">
+      <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
     </ion-fab-button>
   </ion-fab-list>
 </ion-fab>
@@ -28,14 +66,28 @@
 <!-- Active Gymkhana Indicator -->
 <div *ngIf="isCreatorMode && activeGymkhana" class="gymkhana-indicator" role="status">
   <ion-text color="light">
-    <p>Editando: <strong>{{ activeGymkhana.name }}</strong></p>
+    <p>Modo Edición: <strong>{{ activeGymkhana.name }}</strong></p>
   </ion-text>
 </div>
+
+<!-- Delete Gymkhana FAB (Only for Creator Mode and active gymkhana) -->
+<ion-fab *ngIf="isCreatorMode && activeGymkhana" vertical="top" horizontal="start" slot="fixed" class="ion-margin-top ion-margin-start">
+  <ion-fab-button color="danger" (click)="confirmDelete()" aria-label="Eliminar definitivamente esta gimkana">
+    <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<!-- Exit Game FAB (Only for Player Mode and active game) -->
+<ion-fab *ngIf="!isCreatorMode && activeGymkhana" vertical="top" horizontal="start" slot="fixed" class="ion-margin-top ion-margin-start">
+  <ion-fab-button color="warning" (click)="confirmExitGame()" aria-label="Abandonar la partida actual y volver al inicio">
+    <ion-icon name="exit-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
 
 <!-- Locate User FAB -->
 <ion-fab vertical="bottom" horizontal="end" slot="fixed" class="ion-margin">
   <ion-fab-button (click)="centerOnUser()" 
-                  aria-label="Centrar mapa en mi ubicación actual"
+                  aria-label="Centrar el mapa en mi posición actual"
                   title="Centrar en mi ubicación">
     <ion-icon name="locate-outline" aria-hidden="true"></ion-icon>
   </ion-fab-button>
@@ -43,6 +95,13 @@
 
 <!-- Map Selection Indicator -->
 <div *ngIf="isMapSelectionActive" class="selection-overlay" role="alert" aria-live="polite">
-  <p>Toque el mapa para fijar la ubicación</p>
-  <ion-button size="small" fill="clear" color="light" (click)="isMapSelectionActive = false">Cancelar</ion-button>
+  <p>Toque el mapa para establecer la ubicación del punto</p>
+  <ion-button size="small" fill="clear" color="light" (click)="isMapSelectionActive = false" aria-label="Cancelar selección en el mapa">Cancelar</ion-button>
 </div>
+
+<!-- Finalize Gymkhana FAB (Only for Creator Mode and at least 3 waypoints) -->
+<ion-fab *ngIf="isCreatorMode && canSaveGymkhana" vertical="bottom" horizontal="start" slot="fixed" class="ion-margin">
+  <ion-fab-button color="success" (click)="openAssignmentForm()" aria-label="Abrir formulario de guardado y configuración de rutas">
+    <ion-icon name="save-outline" aria-hidden="true"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

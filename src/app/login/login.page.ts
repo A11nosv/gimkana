@@ -22,6 +22,8 @@ import { AuthService } from '../services/auth';
 import { addIcons } from 'ionicons';
 import { lockClosedOutline, personOutline } from 'ionicons/icons';
 
+import { Title } from '@angular/platform-browser';
+
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
@@ -51,11 +53,17 @@ export class LoginPage implements OnInit {
   pass = '';
   errorMessage = '';
 
-  constructor(private authService: AuthService, private router: Router) {
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private titleService: Title
+  ) {
     addIcons({ personOutline, lockClosedOutline });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.titleService.setTitle('Iniciar Sesión - Gimkana A11y');
+  }
 
   login() {
     this.errorMessage = '';
@@ -63,7 +71,6 @@ export class LoginPage implements OnInit {
       this.router.navigate(['/tabs/tab2']);
     } else {
       this.errorMessage = 'Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo.';
-      // Accessibility: Focus on error message could be added here
     }
   }
 

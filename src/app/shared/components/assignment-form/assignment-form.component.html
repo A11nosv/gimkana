@@ -1,41 +1,94 @@
 <ion-header>
   <ion-toolbar>
-    <ion-title>Asignar Waypoints</ion-title>
+    <ion-title>Ruta por Grupos</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="cancel()" aria-label="Cancelar y cerrar">Cerrar</ion-button>
+      <ion-button (click)="cancel()">Cancelar</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div role="form" aria-labelledby="assign-title">
-    <h2 id="assign-title" class="ion-margin-bottom">Distribución por Grupos</h2>
-    <p class="ion-margin-bottom">Seleccione qué puntos de control debe visitar cada grupo.</p>
+  <div role="form" aria-labelledby="form-title">
+    <h2 id="form-title">Configurar Recorrido</h2>
+    <p>Seleccione un grupo para definir el orden de los puntos que debe visitar.</p>
 
-    <div *ngFor="let group of gymkhana.groups; let i = index" class="group-card ion-margin-bottom">
+    <!-- Group Selection -->
+    <ion-list>
+      <ion-list-header>
+        <ion-label>Seleccionar Grupo</ion-label>
+      </ion-list-header>
+      <ion-item *ngFor="let group of gymkhana.groups; let i = index" 
+                button 
+                [color]="selectedGroupIndex === i ? 'primary' : ''"
+                (click)="selectGroup(i)">
+        <ion-label>{{ group.name }}</ion-label>
+        <ion-note slot="end" *ngIf="tempAssignments[i].waypointIds.length > 0">
+          {{ tempAssignments[i].waypointIds.length }} puntos asignados
+        </ion-note>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="selectedGroupIndex !== null" class="ion-margin-top">
       <ion-card>
         <ion-card-header>
-          <ion-card-title>{{ group.name }}</ion-card-title>
+          <ion-card-title>Puntos para {{ gymkhana.groups[selectedGroupIndex].name }}</ion-card-title>
         </ion-card-header>
         <ion-card-content>
+          
+          <!-- Waypoint Selection -->
           <ion-list>
+            <ion-list-header>
+              <ion-label>Puntos Disponibles</ion-label>
+            </ion-list-header>
             <ion-item *ngFor="let wp of gymkhana.waypoints">
               <ion-label>{{ wp.name }}</ion-label>
-              <ion-checkbox 
-                slot="end" 
-                [checked]="isWaypointSelected(i, wp.id)"
-                (ionChange)="toggleWaypoint(i, wp.id, $event.detail.checked)"
-                [aria-label]="'Asignar ' + wp.name + ' a ' + group.name">
+              <ion-checkbox slot="start" 
+                            [checked]="isWaypointInAssignment(wp.id)"
+                            (ionChange)="toggleWaypoint(wp.id, $event.detail.checked)">
               </ion-checkbox>
             </ion-item>
           </ion-list>
+
+          <!-- Waypoint Ordering -->
+          <ion-list *ngIf="currentAssignment && currentAssignment.waypointIds.length > 0">
+            <ion-item-divider>
+              <ion-label>Orden de Visita (Arrastre o use flechas para reordenar)</ion-label>
+              <ion-button slot="end" size="small" fill="clear" (click)="shuffleWaypoints()" aria-label="Asignar orden aleatorio a los puntos">
+                <ion-icon name="shuffle-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+              </ion-button>
+            </ion-item-divider>
+            <ion-reorder-group [disabled]="false" (ionItemReorder)="handleReorder($event)">
+              <ion-item *ngFor="let id of currentAssignment.waypointIds; let i = index">
+                <ion-label>{{ getWaypointName(id) }}</ion-label>
+                
+                <!-- Accessibility: Alternative to dragging (WCAG 2.2 2.5.7) -->
+                <ion-buttons slot="end">
+                  <ion-button (click)="moveUp(i)" [disabled]="i === 0" aria-label="Subir este punto en el orden">
+                    <ion-icon name="arrow-up-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+                  </ion-button>
+                  <ion-button (click)="moveDown(i)" [disabled]="i === currentAssignment.waypointIds.length - 1" aria-label="Bajar este punto en el orden">
+                    <ion-icon name="arrow-down-outline" slot="icon-only" aria-hidden="true"></ion-icon>
+                  </ion-button>
+                </ion-buttons>
+
+                <ion-reorder slot="end">
+                  <ion-icon name="reorder-two-outline" aria-hidden="true"></ion-icon>
+                </ion-reorder>
+              </ion-item>
+            </ion-reorder-group>
+          </ion-list>
+
         </ion-card-content>
       </ion-card>
     </div>
 
-    <div class="actions ion-margin-top">
-      <ion-button expand="block" (click)="save()">
-        Guardar Asignaciones
+    <div class="ion-margin-top buttons-container">
+      <ion-button expand="block" fill="outline" (click)="save()">
+        Guardar
+      </ion-button>
+      
+      <ion-button *ngIf="isValidToPublish" expand="block" color="success" (click)="publish()">
+        Publicar Gimkana
       </ion-button>
     </div>
   </div>

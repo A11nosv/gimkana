@@ -2,7 +2,7 @@
   <ion-toolbar>
     <ion-title>Nueva Gimkana</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="cancel()" aria-label="Cancelar y cerrar formulario">Cerrar</ion-button>
+      <ion-button (click)="cancel()" aria-label="Cerrar formulario de nueva gimkana">Cerrar</ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
@@ -33,9 +33,10 @@
           placeholder="Ej: 3"
           min="1"
           aria-required="true"
-          required>
+          required
+          aria-describedby="num-groups-error">
         </ion-input>
-        <ion-note slot="error" *ngIf="numGroups !== null && numGroups < 1">
+        <ion-note slot="error" id="num-groups-error" *ngIf="numGroups !== null && numGroups < 1">
           Debe haber al menos un grupo.
         </ion-note>
       </ion-item>
