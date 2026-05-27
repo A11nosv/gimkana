@@ -55,8 +55,13 @@
       </ion-item>
 
       <div *ngIf="mode !== 'gps'" class="coordinates-info ion-margin-bottom">
-        <p><strong>Coordenadas seleccionadas:</strong></p>
-        <p>Lat: {{ lat | number:'1.4-6' }}, Lng: {{ lng | number:'1.4-6' }}</p>
+        <ion-item lines="none">
+          <ion-label>
+            <p><strong>Coordenadas GPS:</strong></p>
+            <p>Latitud: {{ lat | number:'1.4-6' }}</p>
+            <p>Longitud: {{ lng | number:'1.4-6' }}</p>
+          </ion-label>
+        </ion-item>
       </div>
     </ion-list>
 

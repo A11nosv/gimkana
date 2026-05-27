@@ -84,6 +84,14 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
+    // Solicitar permisos de forma proactiva al iniciar el componente
+    this.locationService.requestPermissions().then(granted => {
+      if (granted) {
+        this.locationService.startWatching();
+        this.locationService.getCurrentPosition(); // Forzar primera obtención
+      }
+    });
+
     this.locationSubscription = this.locationService.position$.subscribe(position => {
       if (position && this.isMapInitialized) {
         this.updateUserLocation(
@@ -91,6 +99,12 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
           position.coords.longitude,
           position.coords.accuracy
         );
+        
+        // Si no hay ginkana o puntos, centrar en el usuario la primera vez
+        if (!this.activeGymkhana || this.activeGymkhana.waypoints.length === 0) {
+           // Solo centrar si el mapa no ha sido movido o es la primera vez
+           this.map.setView([position.coords.latitude, position.coords.longitude], 17);
+        }
       }
     });
 
@@ -164,18 +178,24 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    this.locationService.startWatching();
-    
-    this.locationService.getCurrentPosition().then(position => {
-      if (position) {
-        this.updateUserLocation(
-          position.coords.latitude, 
-          position.coords.longitude,
-          position.coords.accuracy
-        );
-        if (!this.activeGymkhana || this.activeGymkhana.waypoints.length === 0) {
-          this.map.setView([position.coords.latitude, position.coords.longitude], 17);
-        }
+    // Solicitar permisos al cargar para asegurar que el usuario vea el prompt inmediatamente
+    this.locationService.requestPermissions().then(granted => {
+      if (granted) {
+        this.locationService.startWatching();
+        this.locationService.getCurrentPosition().then(position => {
+          if (position) {
+            this.updateUserLocation(
+              position.coords.latitude, 
+              position.coords.longitude,
+              position.coords.accuracy
+            );
+            if (!this.activeGymkhana || this.activeGymkhana.waypoints.length === 0) {
+              this.map.setView([position.coords.latitude, position.coords.longitude], 17);
+            }
+          }
+        });
+      } else {
+        console.warn('Permisos de ubicación denegados al inicio');
       }
     });
 
@@ -219,9 +239,19 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async createFromDevice() {
+    console.log('Botón de captura desde dispositivo pulsado');
     const position = await this.locationService.getCurrentPosition();
+    console.log('Posición obtenida:', position);
     if (position) {
       this.openLocationForm('device', position.coords.latitude, position.coords.longitude);
+    } else {
+      console.warn('No se pudo obtener la posición del dispositivo para crear el punto');
+      const alert = await this.alertCtrl.create({
+        header: 'Error de Ubicación',
+        message: 'No se pudo obtener la ubicación actual del dispositivo. Asegúrate de tener el GPS activado y haber concedido los permisos necesarios.',
+        buttons: ['OK']
+      });
+      await alert.present();
     }
   }
 

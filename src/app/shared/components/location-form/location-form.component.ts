@@ -6,7 +6,6 @@ import {
   IonLabel, 
   IonInput, 
   IonButton, 
-  IonText,
   IonList,
   IonHeader,
   IonToolbar,
@@ -34,7 +33,6 @@ export interface WaypointData {
     IonLabel, 
     IonInput, 
     IonButton, 
-    IonText,
     IonList,
     IonHeader,
     IonToolbar,
@@ -88,3 +86,4 @@ export class LocationFormComponent {
     this.modalCtrl.dismiss();
   }
 }
+

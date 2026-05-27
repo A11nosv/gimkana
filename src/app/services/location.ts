@@ -14,24 +14,57 @@ export class LocationService {
 
   async requestPermissions(): Promise<boolean> {
     try {
+      console.log('Iniciando solicitud de permisos de ubicación...');
+      
+      // En entorno web, checkPermissions puede devolver 'prompt'.
+      // Intentamos solicitar permisos directamente.
       const status = await Geolocation.checkPermissions();
-      if (status.location === 'denied') {
+      console.log('Estado actual de permisos (Capacitor):', status);
+
+      if (status.location === 'granted') {
+        return true;
+      }
+
+      if (status.location === 'denied' || status.coarseLocation === 'denied') {
+        console.warn('Los permisos han sido denegados previamente.');
         return false;
       }
-      if (status.location !== 'granted') {
-        const requestStatus = await Geolocation.requestPermissions();
-        return requestStatus.location === 'granted';
-      }
-      return true;
+
+      // Solicitar permisos de forma explícita
+      console.log('Solicitando permisos al sistema...');
+      const requestStatus = await Geolocation.requestPermissions({
+        permissions: ['location', 'coarseLocation']
+      });
+      console.log('Resultado de la solicitud de permisos:', requestStatus);
+      
+      return requestStatus.location === 'granted';
     } catch (error) {
-      console.error('Error checking/requesting permissions', error);
-      return false;
+      console.error('Error crítico al solicitar permisos:', error);
+      // Fallback para web si Capacitor falla en el navegador
+      return new Promise((resolve) => {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            () => resolve(true),
+            (err) => {
+              console.error('Error en fallback de geolocalización web:', err);
+              resolve(false);
+            },
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
+        } else {
+          resolve(false);
+        }
+      });
     }
   }
 
   async getCurrentPosition(): Promise<Position | null> {
+    console.log('Solicitando posición actual...');
     const hasPermission = await this.requestPermissions();
-    if (!hasPermission) return null;
+    if (!hasPermission) {
+      console.warn('Permisos de ubicación no concedidos');
+      return null;
+    }
 
     try {
       const position = await Geolocation.getCurrentPosition({
@@ -39,10 +72,11 @@ export class LocationService {
         timeout: 10000,
         maximumAge: 0
       });
+      console.log('Posición recibida con éxito:', position);
       this.positionSubject.next(position);
       return position;
     } catch (error) {
-      console.error('Error getting current position', error);
+      console.error('Error al obtener la posición actual:', error);
       return null;
     }
   }
