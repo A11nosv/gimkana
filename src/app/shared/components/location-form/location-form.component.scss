@@ -1,26 +1,7 @@
-.coordinates-info {
-  background-color: var(--ion-color-light);
-  padding: 15px;
-  border-radius: 8px;
-  border-left: 4px solid var(--ion-color-primary);
-  
-  p {
-    margin: 5px 0;
-  }
-}
-
 .actions {
   ion-button {
     --border-radius: 8px;
     height: 50px;
     font-weight: bold;
-  }
-}
-
-/* Accessibility: High contrast */
-@media (prefers-contrast: high) {
-  .coordinates-info {
-    border: 2px solid currentColor;
-    background-color: transparent;
   }
 }

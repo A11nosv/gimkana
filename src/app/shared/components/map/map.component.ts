@@ -17,7 +17,10 @@ import {
   saveOutline,
   listOutline,
   playOutline,
-  exitOutline
+  exitOutline,
+  locationOutline,
+  radioOutline,
+  location
 } from 'ionicons/icons';
 
 import { GymkhanaService, Gymkhana, Waypoint } from '../../../services/gymkhana';
@@ -48,6 +51,7 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   public isMapSelectionActive = false;
   public activeGymkhana: Gymkhana | null = null;
   public distance$ = this.radarService.distance$;
+  public showPermissionButton = false;
 
   constructor(
     private locationService: LocationService,
@@ -67,7 +71,10 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       saveOutline,
       listOutline,
       playOutline,
-      exitOutline
+      exitOutline,
+      locationOutline,
+      radioOutline,
+      location
     });
   }
 
@@ -83,14 +90,69 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
     return 1 - (distance / maxDistance);
   }
 
-  ngOnInit() {
-    // Solicitar permisos de forma proactiva al iniciar el componente
-    this.locationService.requestPermissions().then(granted => {
-      if (granted) {
+  async checkPermissionStatus() {
+    try {
+      const state = await this.locationService.checkWebPermissionState();
+      console.log('[MapComponent] Estado de permisos web:', state);
+      
+      // Si es 'prompt' o 'unknown' (Safari antiguo, etc.), mostramos el botón para capturar el gesto del usuario
+      if (state === 'prompt' || state === 'unknown') {
+        this.showPermissionButton = true;
+      } else if (state === 'granted') {
+        this.showPermissionButton = false;
         this.locationService.startWatching();
-        this.locationService.getCurrentPosition(); // Forzar primera obtención
+      } else if (state === 'denied') {
+        this.showPermissionButton = false;
+        // Opcional: mostrar un mensaje persistente de "Permisos Denegados"
       }
-    });
+    } catch (error) {
+      console.error('[MapComponent] Error al verificar estado de permisos:', error);
+      // Por seguridad, mostramos el botón si falla la verificación
+      this.showPermissionButton = true;
+    }
+  }
+
+  async requestWebPermission() {
+    try {
+      console.log('[MapComponent] Solicitando permisos vía gesto de usuario...');
+      const granted = await this.locationService.requestPermissions();
+      if (granted) {
+        this.showPermissionButton = false;
+        this.locationService.startWatching();
+        const pos = await this.locationService.getCurrentPosition();
+        if (pos && this.map) {
+          this.map.setView([pos.coords.latitude, pos.coords.longitude], 17);
+        } else if (!pos) {
+          // Si pos es null después de "conceder", probablemente sea por falta de HTTPS o error de hardware
+          const isSecure = window.isSecureContext;
+          const alert = await this.alertCtrl.create({
+            header: 'Error de Ubicación',
+            message: !isSecure ? 
+              'El navegador bloquea la ubicación en sitios NO seguros (HTTP). Por favor, usa una conexión HTTPS.' : 
+              'No se pudo obtener tu ubicación. Asegúrate de que el GPS esté activo y de no haber bloqueado el acceso en este sitio.',
+            buttons: ['Entendido']
+          });
+          await alert.present();
+          this.showPermissionButton = true; // Volver a mostrar para reintentar
+        }
+      } else {
+        const isSecure = window.isSecureContext || window.location.hostname === 'localhost';
+        const alert = await this.alertCtrl.create({
+          header: 'Permisos requeridos',
+          message: !isSecure ? 
+            'El navegador bloquea la ubicación en sitios NO seguros (HTTP). Por favor, usa una conexión HTTPS.' :
+            'Para jugar a la gimkana es necesario acceder a tu ubicación. Por favor, actívala en los ajustes de tu navegador.',
+          buttons: ['Entendido']
+        });
+        await alert.present();
+      }
+    } catch (error) {
+      console.error('[MapComponent] Error crítico en requestWebPermission:', error);
+    }
+  }
+
+  ngOnInit() {
+    this.checkPermissionStatus();
 
     this.locationSubscription = this.locationService.position$.subscribe(position => {
       if (position && this.isMapInitialized) {
@@ -178,27 +240,6 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     });
 
-    // Solicitar permisos al cargar para asegurar que el usuario vea el prompt inmediatamente
-    this.locationService.requestPermissions().then(granted => {
-      if (granted) {
-        this.locationService.startWatching();
-        this.locationService.getCurrentPosition().then(position => {
-          if (position) {
-            this.updateUserLocation(
-              position.coords.latitude, 
-              position.coords.longitude,
-              position.coords.accuracy
-            );
-            if (!this.activeGymkhana || this.activeGymkhana.waypoints.length === 0) {
-              this.map.setView([position.coords.latitude, position.coords.longitude], 17);
-            }
-          }
-        });
-      } else {
-        console.warn('Permisos de ubicación denegados al inicio');
-      }
-    });
-
     setTimeout(() => {
       this.map.invalidateSize();
     }, 200);
@@ -239,16 +280,21 @@ export class MapComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async createFromDevice() {
-    console.log('Botón de captura desde dispositivo pulsado');
+    console.log('[MapComponent] Botón de captura desde dispositivo pulsado');
     const position = await this.locationService.getCurrentPosition();
-    console.log('Posición obtenida:', position);
+    console.log('[MapComponent] Posición obtenida:', position);
+    
     if (position) {
       this.openLocationForm('device', position.coords.latitude, position.coords.longitude);
     } else {
-      console.warn('No se pudo obtener la posición del dispositivo para crear el punto');
+      const isSecure = window.isSecureContext || window.location.hostname === 'localhost';
+      console.warn('[MapComponent] No se pudo obtener la posición del dispositivo');
+      
       const alert = await this.alertCtrl.create({
         header: 'Error de Ubicación',
-        message: 'No se pudo obtener la ubicación actual del dispositivo. Asegúrate de tener el GPS activado y haber concedido los permisos necesarios.',
+        message: !isSecure ? 
+          'El navegador bloquea la ubicación en sitios NO seguros (HTTP). Por favor, usa una conexión HTTPS.' :
+          'No se pudo obtener la ubicación actual del dispositivo. Asegúrate de tener el GPS activado y de haber permitido el acceso en tu navegador.',
         buttons: ['OK']
       });
       await alert.present();

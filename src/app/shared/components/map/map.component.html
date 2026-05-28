@@ -1,5 +1,19 @@
 <div #mapContainer class="map-container" role="application" aria-label="Mapa de navegación para la gimkana"></div>
 
+<!-- Web Permission Request Overlay (WCAG 2.1) -->
+<div *ngIf="showPermissionButton" class="permission-overlay" role="alertdialog" aria-labelledby="perm-title" aria-describedby="perm-desc">
+  <ion-card class="ion-padding ion-text-center">
+    <ion-card-content>
+      <ion-icon name="location-outline" color="primary" style="font-size: 48px;"></ion-icon>
+      <h2 id="perm-title">Ubicación Necesaria</h2>
+      <p id="perm-desc">Para poder jugar y navegar por la gimkana, necesitamos acceder a tu ubicación GPS.</p>
+      <ion-button expand="block" (click)="requestWebPermission()" class="ion-margin-top">
+        Permitir Ubicación
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+</div>
+
 <!-- Visual Radar/Distance Indicator (WCAG 1.1.1, 1.4.1) -->
 <div *ngIf="!isCreatorMode && activeGymkhana && (distance$ | async) as distance" 
      class="radar-overlay" 

@@ -32,37 +32,29 @@
         </ion-textarea>
       </ion-item>
 
-      <ion-item *ngIf="mode === 'gps'" class="ion-margin-bottom">
+      <ion-item class="ion-margin-bottom">
         <ion-label position="stacked">Latitud</ion-label>
         <ion-input 
           type="number" 
           [(ngModel)]="lat" 
           placeholder="0.0000"
+          [readonly]="mode !== 'gps'"
           aria-required="true"
           required>
         </ion-input>
       </ion-item>
 
-      <ion-item *ngIf="mode === 'gps'" class="ion-margin-bottom">
+      <ion-item class="ion-margin-bottom">
         <ion-label position="stacked">Longitud</ion-label>
         <ion-input 
           type="number" 
           [(ngModel)]="lng" 
           placeholder="0.0000"
+          [readonly]="mode !== 'gps'"
           aria-required="true"
           required>
         </ion-input>
       </ion-item>
-
-      <div *ngIf="mode !== 'gps'" class="coordinates-info ion-margin-bottom">
-        <ion-item lines="none">
-          <ion-label>
-            <p><strong>Coordenadas GPS:</strong></p>
-            <p>Latitud: {{ lat | number:'1.4-6' }}</p>
-            <p>Longitud: {{ lng | number:'1.4-6' }}</p>
-          </ion-label>
-        </ion-item>
-      </div>
     </ion-list>
 
     <div class="actions ion-margin-top">
